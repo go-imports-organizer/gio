@@ -1,139 +1,121 @@
-
-# openshift-goimports
-Organizes Go imports according to OpenShift best practices
+<!---
+#
+# Copyright 2023 Go Imports Organizer Contributors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# 	https://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+-->
+# gio
+A customizable imports organizer for the Go programming language
 
 * [Summary](#summary)
-* [Example sorted import block](#example-sorted-import-block)
 * [Installation](#installation)
-* [Usage](#usage)
-* [Examples](#examples)
+* [Configuration](#configuration)
 
-## <a name='Summary'></a>Summary
-Organizes Go imports into the following groups:
- - **standard** - Any of the Go standard library packages
- - **other** - Anything not specifically called out in this list
- - **kubernetes** - Anything that starts with `k8s.io`
- - **openshift** - Anything that starts with `github.com/openshift`
- - **intermediates** - Optional list of groups
- - **module** - Anything that is part of the current module
+## <a name='summary'></a>Summary
+`gio` is a fully customizable Go imports organizer. The configuration
+is project based and is stored in a `gio.yaml` file in the root of your
+module's project folder alongside the `go.mod` file. For consistency
+the `gio.yaml` file should be committed to your projects vcs.
 
-## <a name='Examplesortedimportblock'></a>Example sorted import block
-```
-import (
-	"context"
-	"encoding/json"
-	"fmt"
-	"io"
-	"os"
-	"path/filepath"
+## <a name='installation'></a>Installation
 
-	istorage "github.com/containers/image/v5/storage"
-	"github.com/containers/image/v5/types"
-	"github.com/containers/storage"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/serializer"
-	restclient "k8s.io/client-go/rest"
-
-	buildapiv1 "github.com/openshift/api/build/v1"
-	buildscheme "github.com/openshift/client-go/build/clientset/versioned/scheme"
-	buildclientv1 "github.com/openshift/client-go/build/clientset/versioned/typed/build/v1"
-	"github.com/openshift/library-go/pkg/git"
-	"github.com/openshift/library-go/pkg/serviceability"
-	s2iapi "github.com/openshift/source-to-image/pkg/api"
-	s2igit "github.com/openshift/source-to-image/pkg/scm/git"
-
-	bld "github.com/openshift/builder/pkg/build/builder"
-	"github.com/openshift/builder/pkg/build/builder/cmd/scmauth"
-	"github.com/openshift/builder/pkg/build/builder/timing"
-	builderutil "github.com/openshift/builder/pkg/build/builder/util"
-	utillog "github.com/openshift/builder/pkg/build/builder/util/log"
-	"github.com/openshift/builder/pkg/version"
-)
-```
-
-## <a name='Installation'></a>Installation
-```
-# Install using go get
-$ go get -u github.com/openshift-eng/openshift-goimports
-```
-
-## <a name='Usage'></a>Usage
-```
-Usage:
-  openshift-goimports [flags]
-
-Flags:
-  -h, --help                             help for openshift-goimports
-  -i, --intermediate stringArray         Names of go modules to put between openshift and module to organize. Example usage: -i github.com/thirdy/one -i thirdy.io/two
-  -l, --list                             List files whose imports are not sorted without making changes
-  -m, --module string                    The name of the go module. Example: github.com/example-org/example-repo (optional)
-  -p, --path string                      The path to the go module to organize. Defaults to the current directory. (default ".") (optional)
-  -d, --dry                              Dry run only, do not actually make any changes to files
-  -v, --v Level                          number for the log level verbosity
-```
-
-## Matching and Precedence
-
-Each group is identified by a pattern that is sought as a substring in the import path.  For example, the kubernetes group is defined by searching for the substring "k8s.io".  Multiple groups can match one import.  In such a case, the import is put into the first matching group in the following list.
-
-- the module to organize
-- the intermediate modules, in the order given on the command line
-- kubernetes
-- openshift
-- other
-
-An import whose path matches no other group's pattern is put in the standard group.
-
-## <a name='Examples'></a>Examples
-
-### <a name='ExampleCLIusage'></a>Example CLI usage
-*`openshift-goimports` will try to automatically determine the module using the `go.mod` file, if present, at the provided path location.*
-
-```
-# Basic usage, command executed against current directory
-$ openshift-goimports
-
-# Basic usage with command executed in provided directory
-$ openshift-goimports --module github.com/example-org/example-repo --path ~/go/src/example-org/example-repo
-```
-
-### <a name='Examplehacktools.gofile'></a>Example hack/tools.go file
-This file will ensure that the `github.com/openshift-eng/openshift-goimports` repo is vendored into your project.
+### Example scripts/tools.go file
+This file will ensure that the `github.com/go-imports-organizer/gio` repo is vendored into your project.
 ```
 //go:build tools
 // +build tools
 
 package hack
 
-// Add tools that hack scripts depend on here, to ensure they are vendored.
+// Add tools that scripts depend on here, to ensure they are vendored.
 import (
-	_ "github.com/openshift-eng/openshift-goimports"
+	_ "github.com/go-imports-organizer/gio"
 )
 
 ```
 
-### <a name='Examplehackverify-imports.shscript'></a>Example hack/verify-imports.sh script
-This file will check if there are any go files that need to be formatted. If there are, it will print a list of them, and exit with status one (1), otherwise it will exit with status zero (0). 
+### Example scripts/verify-imports.sh script
+This file will check if there are any go files that need to be formatted. If there are, it will print a list of them, and exit with status one (1), otherwise it will exit with status zero (0). Make sure that you make the file executable with `chmod +x scripts/verify-imports.sh`.
 ```
 #!/bin/bash
 
-bad_files=$(go run ./vendor/github.com/openshift-eng/openshift-goimports -m github.com/example/example-repo -l)
+bad_files=$(go run ./vendor/github.com/go-imports-organizer/gio -l)
 if [[ -n "${bad_files}" ]]; then
-        echo "!!! openshift-goimports needs to be run on the following files:"
+        echo "!!! gio needs to be run on the following files:"
         echo "${bad_files}"
         echo "Try running 'make imports'"
         exit 1
 fi
 ```
 
-### <a name='ExampleMakefilesections'></a>Example Makefile sections
+### Example Makefile sections
 ```
-imports: ## Organize imports in go files using openshift-goimports. Example: make imports
-	go run ./vendor/github.com/openshift-eng/openshift-goimports/ -m github.com/example/example-repo
+imports: ## Organize imports in go files using gio. Example: make imports
+	go run ./vendor/github.com/go-imports-organizer/gio
 .PHONY: imports
 
 verify-imports: ## Run import verifications. Example: make verify-imports
 	hack/verify-imports.sh
 .PHONY: verify-imports
 ```
+
+## <a name='Configuration'></a>Configuration
+The `gio.yaml` configuration file is a well formatted yaml file.
+
+### Excludes
+An array of Exclude definitions.
+
+Each Exclude definition is a rule that tells `gio` which files and folders to ignore while looking for Go files that it should organize the imports of. The default configuration file ignores the `.git` directory and the `vendor` directory. The more files and folders that you can ignore at this stage the faster `gio` will run.
+
+#### RegExp
+A string, valid values are any valid Go regular expression.
+
+A well formatted Regular Expression that is used to match against. Be as specific as possible.
+
+#### MatchType
+A string, valid values are `[name, path]`.
+
+Lets `gio` know whether to match agains the files `name` or the files `path` relative to the modules root directory _(where the go.mod file is located)_.
+
+### Groups
+An array of Group definitions
+
+Each group definition is a rule that tells `gio` how you would like the `imports` in your Go files organized. Each definition represents a block of import statements, describing the order in which that block should be displayed and how to identify the items that it should contain.
+
+#### Description
+A string, valid values are any valid string value
+
+A friendly name to identify the definition by instead of trying to decipher the regular expression each time to remember what it does.
+
+#### RegExp
+A string, valid values are any valid Go regular expression.
+
+A well formatted Regular Expression that is used to match against. Be as specific as possible.
+
+Note:
+
+There is one keyword that is available for the RegExp value that is a special keyword, it is `%{module}%`. This keyword automatically creates a regular expression that matches the current module name as defined by the go.mod file. To ensure that it captures the correct imports you should always set the `MatchOrder` to `0` for this definition.
+
+#### MatchOrder
+An integer, valid values are -n...n
+
+Tells `gio` which order the definitions should be matched against in. Lower numbers are first, higher numbers are last.
+
+It is important to ensure the correct `matchorder` is used, expecially if any of your `regexp` have any kind of overlap, such as having a module name of `github.com/example/mymodule` and a group definition for `github.com/example`. You would want to make sure that your `module` definition was matched first or those imports would get rolled into the `github.com/example` one because it is less specific.
+
+
+#### DisplayOrder
+An integer, valid values are -n...n
+
+The order in which the blocks of imports should be displayed in each file. Lower numbers are first, higher numbers are last

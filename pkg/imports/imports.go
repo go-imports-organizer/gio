@@ -1,11 +1,11 @@
 /*
-Copyright © 2020 Corey Daley <cdaley@redhat.com>
+Copyright 2023 Go Imports Organizer Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-	http://www.apache.org/licenses/LICENSE-2.0
+	https://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -28,6 +28,7 @@ import (
 	"go/token"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"regexp"
 	"sort"
@@ -35,29 +36,8 @@ import (
 	"strings"
 	"sync"
 
-	"k8s.io/klog/v2"
-)
-
-type ImportRegexp struct {
-	Bucket string
-	Regexp *regexp.Regexp
-}
-
-type byPathValue []ast.ImportSpec
-
-func (a byPathValue) Len() int           { return len(a) }
-func (a byPathValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byPathValue) Less(i, j int) bool { return a[i].Path.Value < a[j].Path.Value }
-
-var (
-	impLine           = regexp.MustCompile(`^\s+(?:[\w\.]+\s+)?"(.+)"`)
-	vendor            = regexp.MustCompile(`vendor/`)
-	importOrderPrefix = []string{
-		"standard",
-		"other",
-		"kubernetes",
-		"openshift",
-	}
+	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
+	"github.com/go-imports-organizer/gio/pkg/sorter"
 )
 
 // taken from https://github.com/golang/tools/blob/71482053b885ea3938876d1306ad8a1e4037f367/internal/imports/imports.go#L380
@@ -85,7 +65,7 @@ func addSpaces(r io.Reader, breaks []string) ([]byte, error) {
 			inImports = false
 		}
 		if inImports && len(breaks) > 0 {
-			if m := impLine.FindStringSubmatch(s); m != nil {
+			if m := regexp.MustCompile(`^\s+(?:[\w\.]+\s+)?"(.+)"`).FindStringSubmatch(s); m != nil {
 				if m[1] == breaks[0] {
 					out.WriteByte('\n')
 					breaks = breaks[1:]
@@ -99,88 +79,63 @@ func addSpaces(r io.Reader, breaks []string) ([]byte, error) {
 }
 
 // Format takes a channel of file paths and formats the files imports
-func Format(files chan string, wg *sync.WaitGroup, intermediatePatternList []string, modulePtr *string, dry *bool, list *bool) {
+func Format(files *chan string, wg *sync.WaitGroup, regExpMatchers []v1.RegExpMatcher, displayOrder []string, listOnly *bool) {
 	defer wg.Done()
-	importRegexp := []ImportRegexp{
-		{Bucket: "module", Regexp: regexp.MustCompile(*modulePtr)},
-	}
-	importOrder := importOrderPrefix
-	for idx, intermediatePattern := range intermediatePatternList {
-		imRe := regexp.MustCompile(intermediatePattern)
-		bucketName := fmt.Sprintf("intermediate%d", idx)
-		importRegexp = append(importRegexp, ImportRegexp{Bucket: bucketName, Regexp: imRe})
-		importOrder = append(importOrder, bucketName)
-	}
-	importRegexp = append(importRegexp, []ImportRegexp{
-		{Bucket: "kubernetes", Regexp: regexp.MustCompile("k8s.io")},
-		{Bucket: "openshift", Regexp: regexp.MustCompile("github.com/openshift")},
-		{Bucket: "other", Regexp: regexp.MustCompile("[a-zA-Z0-9]+\\.[a-zA-Z0-9]+/")},
-	}...)
-	importOrder = append(importOrder, "module")
-
-	for path := range files {
+	for path := range *files {
+		var importGroups = make(map[string][]ast.ImportSpec)
 		if len(path) == 0 {
 			continue
 		}
-		klog.V(2).Infof("Processing %s", path)
 
 		info, err := os.Stat(path)
 		if err != nil {
-			klog.Errorf("%#v", err)
+			log.Fatalf("%s", err.Error())
 		}
 		oldModTime := info.ModTime()
 
-		importGroups := map[string][]ast.ImportSpec{
-			"standard":   {},
-			"other":      {},
-			"kubernetes": {},
-			"openshift":  {},
-			"module":     {},
-		}
 		var breaks []string
+
 		fs := token.NewFileSet()
-		contents, err := ioutil.ReadFile(path)
-		if err != nil {
-			klog.Errorf("%#v", err)
-		}
-		f, err := parser.ParseFile(fs, path, contents, parser.ParseComments)
+		f, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
 		if err != nil {
 			var scannerErrorList scanner.ErrorList
 			if errors.As(err, &scannerErrorList) {
 				for _, err := range scannerErrorList {
-					klog.Errorf("%v", err)
+					log.Fatalf("%s", err)
 				}
-				os.Exit(1)
 			} else {
-				klog.Errorf("%v", err)
-				os.Exit(1)
+				log.Fatalf("%s", err.Error())
 			}
 		}
-
 		for _, i := range f.Imports {
 			if len(i.Path.Value) == 0 {
 				continue
 			}
 			found := false
-			for _, r := range importRegexp {
-				if r.Regexp.MatchString(i.Path.Value) {
+			unquotedPath, err := strconv.Unquote(i.Path.Value)
+			if err != nil {
+				log.Printf("unable to unquote %s", i.Path.Value)
+			}
+			for _, r := range regExpMatchers {
+				if r.RegExp.MatchString(unquotedPath) {
+					if _, ok := importGroups[r.Bucket]; !ok {
+						importGroups[r.Bucket] = []ast.ImportSpec{}
+					}
 					importGroups[r.Bucket] = append(importGroups[r.Bucket], *i)
 					found = true
-					klog.V(3).InfoS("Import classified", "file", path, "import", i.Path.Value, "bucket", r.Bucket)
 					break
 				}
 			}
 			if !found {
-				importGroups["standard"] = append(importGroups["standard"], *i)
+				importGroups["other"] = append(importGroups["other"], *i)
 			}
 		}
-
 		for _, decl := range f.Decls {
 			gen, ok := decl.(*ast.GenDecl)
 			if ok && gen.Tok == token.IMPORT {
 				gen.Specs = []ast.Spec{}
-				for _, group := range importOrder {
-					sort.Sort(byPathValue(importGroups[group]))
+				for _, group := range displayOrder {
+					sort.Sort(sorter.ByPathValue(importGroups[group]))
 					for n := range importGroups[group] {
 						importGroups[group][n].EndPos = 0
 						importGroups[group][n].Path.ValuePos = 0
@@ -188,10 +143,10 @@ func Format(files chan string, wg *sync.WaitGroup, intermediatePatternList []str
 							importGroups[group][n].Name.NamePos = 0
 						}
 						gen.Specs = append(gen.Specs, &importGroups[group][n])
-						if n == 0 && group != importOrder[0] {
+						if n == 0 && group != displayOrder[0] {
 							newstr, err := strconv.Unquote(importGroups[group][n].Path.Value)
 							if err != nil {
-								klog.Errorf("%#v", err)
+								log.Fatalf("%#v", err)
 							}
 							breaks = append(breaks, newstr)
 						}
@@ -206,27 +161,39 @@ func Format(files chan string, wg *sync.WaitGroup, intermediatePatternList []str
 
 		var buf bytes.Buffer
 		if err = printConfig.Fprint(&buf, fs, f); err != nil {
-			klog.Errorf("%#v", err)
+			log.Fatalf("%s", err.Error())
 		}
 		out, err := addSpaces(bytes.NewReader(buf.Bytes()), breaks)
+		if err != nil {
+			log.Fatalf("%s", err.Error())
+		}
 		out, err = format.Source(out)
-		if bytes.Compare(contents, out) != 0 {
-			if *dry {
-				klog.Infof("%s is not sorted", path)
-			} else if *list {
-				fmt.Printf("%s is not sorted \n", path)
-			} else {
-				info, err := os.Stat(path)
-				if !info.ModTime().Equal(oldModTime) {
-					klog.Warningf("%s got changed while formatting, cowardly refusing to overwrite", path)
-					continue
-				}
-				if err = ioutil.WriteFile(path, out, info.Mode()); err != nil {
-					klog.Errorf("%#v", err)
-				}
-				klog.Infof("%s updated", path)
+		if err != nil {
+			log.Fatalf("%s", err.Error())
+		}
+
+		if *listOnly {
+			oldFile, err := os.ReadFile(path)
+			if err != nil {
+				log.Fatalf("unable to read file %q: %s", path, err.Error())
+			}
+			if !bytes.Equal(oldFile, out) {
+				log.Printf("%s is not sorted \n", path)
 			}
 		}
 
+		info, err = os.Stat(path)
+		if err != nil {
+			log.Fatalf("%s", err.Error())
+		}
+		if !info.ModTime().Equal(oldModTime) {
+			log.Printf("%s was modified while formatting, cowardly refusing to overwrite", path)
+			continue
+		}
+		if err = ioutil.WriteFile(path, out, info.Mode()); err != nil {
+			log.Fatalf("%#v", err)
+		}
+
 	}
+
 }

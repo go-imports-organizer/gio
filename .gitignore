@@ -1,1 +1,3 @@
-openshift-goimports
+gio
+*.pprof
+profile*

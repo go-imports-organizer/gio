@@ -1,0 +1,20 @@
+# An excellent beginner configuration
+# See https://github.com/go-imports-organizer/gio/blob/main/README.md for more information
+excludes:
+  - matchtype: name
+    regexp: ^\.git$
+  - matchtype: name
+    regexp: ^vendor$
+groups:
+  - description: module
+    displayorder: 2
+    matchorder: 0
+    regexp: "%{module}%"
+  - description: standard
+    displayorder: 0
+    matchorder: 1
+    regexp: ^[a-zA-Z0-9\/]+$
+  - description: other
+    displayorder: 1
+    matchorder: 2
+    regexp: '[a-zA-Z0-9]+\.[a-zA-Z0-9]+/'
