@@ -22,13 +22,21 @@ A customizable imports organizer for the Go programming language
 * [Installation](#installation)
 * [Configuration](#configuration)
 
-## <a name='summary'></a>Summary
+# <a name='summary'></a>Summary
 `gio` is a fully customizable Go imports organizer. The configuration
 is project based and is stored in a `gio.yaml` file in the root of your
 module's project folder alongside the `go.mod` file. For consistency
 the `gio.yaml` file should be committed to your projects vcs.
 
-## <a name='installation'></a>Installation
+# <a name='installation'></a>Installation
+
+## Command Line Tool
+
+```
+  $ go install github.com/go-imports-organizer/gio@latest
+```
+
+## Go project configuration
 
 ### Example scripts/tools.go file
 This file will ensure that the `github.com/go-imports-organizer/gio` repo is vendored into your project.
@@ -70,7 +78,7 @@ verify-imports: ## Run import verifications. Example: make verify-imports
 .PHONY: verify-imports
 ```
 
-## <a name='Configuration'></a>Configuration
+# <a name='Configuration'></a>Configuration
 The `gio.yaml` configuration file is a well formatted yaml file.
 
 ### Excludes
