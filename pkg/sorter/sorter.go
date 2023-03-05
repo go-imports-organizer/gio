@@ -21,11 +21,11 @@ import (
 	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
 )
 
-type ByPathValue []ast.ImportSpec
+type SortImportsByPathValue []ast.ImportSpec
 
-func (a ByPathValue) Len() int           { return len(a) }
-func (a ByPathValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a ByPathValue) Less(i, j int) bool { return a[i].Path.Value < a[j].Path.Value }
+func (a SortImportsByPathValue) Len() int           { return len(a) }
+func (a SortImportsByPathValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a SortImportsByPathValue) Less(i, j int) bool { return a[i].Path.Value < a[j].Path.Value }
 
 type SortGroupsByMatchOrder []v1.Group
 
