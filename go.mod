@@ -3,7 +3,7 @@ module github.com/go-imports-organizer/gio
 go 1.20
 
 require (
-	golang.org/x/mod v0.6.0
+	golang.org/x/mod v0.9.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
