@@ -17,6 +17,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
@@ -30,6 +31,7 @@ import (
 	"github.com/go-imports-organizer/gio/pkg/groups"
 	"github.com/go-imports-organizer/gio/pkg/imports"
 	"github.com/go-imports-organizer/gio/pkg/module"
+	"github.com/go-imports-organizer/gio/pkg/version"
 )
 
 var (
@@ -40,6 +42,7 @@ var (
 func main() {
 	// If the -l flag is set, only return a list of what files would have been formatted, but don't make any changes
 	listOnly := flag.Bool("l", false, "list files that need to be organized (no changes made)")
+	versionOnly := flag.Bool("v", false, "print version and exit")
 	flag.Parse()
 
 	// set CPUPROFILE=<filename> to create a <filename>.pprof cpu profile file
@@ -50,6 +53,10 @@ func main() {
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
+	}
+	if *versionOnly {
+		fmt.Fprintf(os.Stdout, "version %s\n", version.Get())
+		os.Exit(0)
 	}
 
 	currentDir, err := os.Getwd()
