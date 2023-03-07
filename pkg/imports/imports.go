@@ -27,7 +27,6 @@ import (
 	"go/scanner"
 	"go/token"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"regexp"
@@ -40,8 +39,8 @@ import (
 	"github.com/go-imports-organizer/gio/pkg/sorter"
 )
 
-// taken from https://github.com/golang/tools/blob/71482053b885ea3938876d1306ad8a1e4037f367/internal/imports/imports.go#L380
-func addSpaces(r io.Reader, breaks []string) ([]byte, error) {
+// borrowed from https://github.com/golang/tools/blob/71482053b885ea3938876d1306ad8a1e4037f367/internal/imports/imports.go#L380
+func AddSpaces(r io.Reader, breaks []string) ([]byte, error) {
 	var out bytes.Buffer
 	in := bufio.NewReader(r)
 	inImports := false
@@ -72,17 +71,72 @@ func addSpaces(r io.Reader, breaks []string) ([]byte, error) {
 				}
 			}
 		}
-
 		fmt.Fprint(&out, s)
 	}
 	return out.Bytes(), nil
 }
 
+func PopulateGroups(importGroups map[string][]ast.ImportSpec, regExpMatchers []v1.RegExpMatcher, imports []*ast.ImportSpec) error {
+	for _, i := range imports {
+		if len(i.Path.Value) == 0 {
+			continue
+		}
+		found := false
+		unquotedPath, err := strconv.Unquote(i.Path.Value)
+		if err != nil {
+			return fmt.Errorf("unable to unquote %s", i.Path.Value)
+		}
+		for _, r := range regExpMatchers {
+			if r.RegExp.MatchString(unquotedPath) {
+				if _, ok := importGroups[r.Bucket]; !ok {
+					importGroups[r.Bucket] = []ast.ImportSpec{}
+				}
+				importGroups[r.Bucket] = append(importGroups[r.Bucket], *i)
+				found = true
+				break
+			}
+		}
+		if !found {
+			importGroups["other"] = append(importGroups["other"], *i)
+		}
+	}
+	return nil
+}
+
+func InsertGroups(f *ast.File, importGroups map[string][]ast.ImportSpec, displayOrder []string) ([]string, error) {
+	var breaks []string
+	for _, decl := range f.Decls {
+		gen, ok := decl.(*ast.GenDecl)
+		if ok && gen.Tok == token.IMPORT {
+			gen.Specs = []ast.Spec{}
+			for _, group := range displayOrder {
+				sort.Sort(sorter.SortImportsByPathValue(importGroups[group]))
+				for n := range importGroups[group] {
+					importGroups[group][n].EndPos = 0
+					importGroups[group][n].Path.ValuePos = 0
+					if importGroups[group][n].Name != nil {
+						importGroups[group][n].Name.NamePos = 0
+					}
+					gen.Specs = append(gen.Specs, &importGroups[group][n])
+					if n == 0 && group != displayOrder[0] {
+						newstr, err := strconv.Unquote(importGroups[group][n].Path.Value)
+						if err != nil {
+							return nil, err
+						}
+						breaks = append(breaks, newstr)
+					}
+				}
+			}
+		}
+	}
+	return breaks, nil
+}
+
 // Format takes a channel of file paths and formats the files imports
-func Format(files *chan string, wg *sync.WaitGroup, regExpMatchers []v1.RegExpMatcher, displayOrder []string, listOnly *bool) {
+func Format(files *chan string, wg *sync.WaitGroup, groupRegExpMatchers []v1.RegExpMatcher, displayOrder []string, listOnly *bool) {
 	defer wg.Done()
 	for path := range *files {
-		var importGroups = make(map[string][]ast.ImportSpec)
+
 		if len(path) == 0 {
 			continue
 		}
@@ -92,8 +146,6 @@ func Format(files *chan string, wg *sync.WaitGroup, regExpMatchers []v1.RegExpMa
 			log.Fatalf("%s", err.Error())
 		}
 		oldModTime := info.ModTime()
-
-		var breaks []string
 
 		fs := token.NewFileSet()
 		f, err := parser.ParseFile(fs, path, nil, parser.ParseComments)
@@ -107,52 +159,15 @@ func Format(files *chan string, wg *sync.WaitGroup, regExpMatchers []v1.RegExpMa
 				log.Fatalf("%s", err.Error())
 			}
 		}
-		for _, i := range f.Imports {
-			if len(i.Path.Value) == 0 {
-				continue
-			}
-			found := false
-			unquotedPath, err := strconv.Unquote(i.Path.Value)
-			if err != nil {
-				log.Printf("unable to unquote %s", i.Path.Value)
-			}
-			for _, r := range regExpMatchers {
-				if r.RegExp.MatchString(unquotedPath) {
-					if _, ok := importGroups[r.Bucket]; !ok {
-						importGroups[r.Bucket] = []ast.ImportSpec{}
-					}
-					importGroups[r.Bucket] = append(importGroups[r.Bucket], *i)
-					found = true
-					break
-				}
-			}
-			if !found {
-				importGroups["other"] = append(importGroups["other"], *i)
-			}
+
+		var importGroups = make(map[string][]ast.ImportSpec)
+		if err := PopulateGroups(importGroups, groupRegExpMatchers, f.Imports); err != nil {
+			log.Fatalf("%s", err)
 		}
-		for _, decl := range f.Decls {
-			gen, ok := decl.(*ast.GenDecl)
-			if ok && gen.Tok == token.IMPORT {
-				gen.Specs = []ast.Spec{}
-				for _, group := range displayOrder {
-					sort.Sort(sorter.ByPathValue(importGroups[group]))
-					for n := range importGroups[group] {
-						importGroups[group][n].EndPos = 0
-						importGroups[group][n].Path.ValuePos = 0
-						if importGroups[group][n].Name != nil {
-							importGroups[group][n].Name.NamePos = 0
-						}
-						gen.Specs = append(gen.Specs, &importGroups[group][n])
-						if n == 0 && group != displayOrder[0] {
-							newstr, err := strconv.Unquote(importGroups[group][n].Path.Value)
-							if err != nil {
-								log.Fatalf("%#v", err)
-							}
-							breaks = append(breaks, newstr)
-						}
-					}
-				}
-			}
+
+		breaks, err := InsertGroups(f, importGroups, displayOrder)
+		if err != nil {
+			log.Fatalf("%s", err.Error())
 		}
 
 		printerMode := printer.TabIndent
@@ -163,7 +178,7 @@ func Format(files *chan string, wg *sync.WaitGroup, regExpMatchers []v1.RegExpMa
 		if err = printConfig.Fprint(&buf, fs, f); err != nil {
 			log.Fatalf("%s", err.Error())
 		}
-		out, err := addSpaces(bytes.NewReader(buf.Bytes()), breaks)
+		out, err := AddSpaces(bytes.NewReader(buf.Bytes()), breaks)
 		if err != nil {
 			log.Fatalf("%s", err.Error())
 		}
@@ -190,10 +205,8 @@ func Format(files *chan string, wg *sync.WaitGroup, regExpMatchers []v1.RegExpMa
 			log.Printf("%s was modified while formatting, cowardly refusing to overwrite", path)
 			continue
 		}
-		if err = ioutil.WriteFile(path, out, info.Mode()); err != nil {
+		if err = os.WriteFile(path, out, info.Mode()); err != nil {
 			log.Fatalf("%#v", err)
 		}
-
 	}
-
 }

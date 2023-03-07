@@ -1,10 +1,10 @@
+# An excellent beginner configuration
+# See https://github.com/go-imports-organizer/gio/blob/main/README.md for more information
 excludes:
   - matchtype: name
     regexp: ^\.git$
   - matchtype: name
     regexp: ^vendor$
-  - matchtype: name
-    regexp: ^testdata$
 groups:
   - description: module
     displayorder: 2

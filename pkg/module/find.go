@@ -17,47 +17,33 @@ package module
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 
 	"golang.org/x/mod/modfile"
 )
 
-func FindGoModuleAndPath(path string) (string, string, error) {
-	if s, err := os.Stat(path); err != nil {
-		return "", "", err
-	} else if !s.IsDir() {
-		path = filepath.Dir(path)
-	}
-
-	path, err := filepath.Abs(path)
-	if err != nil {
-		return "", "", err
-	}
-
+func FindGoModuleNameAndPath(path string) (string, string, error) {
 	for path != "." {
-		modFilePath := fmt.Sprintf("%s/go.mod", path)
-		if _, err := os.Stat(modFilePath); !os.IsNotExist(err) {
-			break
+		if _, err := os.Stat(path); err != nil {
+			if os.IsNotExist(err) {
+				return "", "", fmt.Errorf("%s does not exist: %s", path, err.Error())
+			}
 		}
-		prevPath := path
-		path = filepath.Dir(path)
-		if path == prevPath {
-			return "", "", nil
+		if _, err := os.Stat(fmt.Sprintf("%s/go.mod", path)); err != nil {
+			path = filepath.Dir(path)
+			continue
 		}
-	}
-	if path == "." {
-		return "", "", nil
+		break
 	}
 
-	f, err := ioutil.ReadFile(fmt.Sprintf("%s/go.mod", path))
+	f, err := os.ReadFile(fmt.Sprintf("%s/go.mod", path))
 	if err != nil {
 		return "", "", fmt.Errorf("unable to open go.mod file for reading: %v", err)
 	}
 	module := modfile.ModulePath(f)
 	if len(module) == 0 {
-		return "", "", fmt.Errorf("unable to automatically determine module path, please provide one using the --module flag")
+		return "", "", fmt.Errorf("unable to determine module")
 	}
 	return module, path, nil
 }

@@ -31,12 +31,12 @@ imports: ## Organize imports in go files using gio. Example: make imports
 .PHONY: imports
 
 test: ## Run tests. Example: make test
-	go test -test.shuffle on ./pkg/...
+	go test -test.shuffle on ./pkg/... --cover
 .PHONY: test
 
 build: ## Build the executable. Example: make build
 	@go version
-	go build -mod=vendor -race $(DEBUGFLAGS)
+	go build -mod=readonly -race $(DEBUGFLAGS)
 .PHONY: build
 
 clean: ## Clean up the workspace. Example: make clean
