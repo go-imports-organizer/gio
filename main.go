@@ -55,7 +55,7 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 	if *versionOnly {
-		fmt.Fprintf(os.Stdout, "version %s\n", version.Get())
+		fmt.Fprintf(os.Stdout, "%s\n", version.Get())
 		os.Exit(0)
 	}
 
