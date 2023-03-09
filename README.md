@@ -1,4 +1,4 @@
-[![Go](https://github.com/go-imports-organizer/goio/actions/workflows/go.yml/badge.svg)](https://github.com/go-imports-organizer/goio/actions/workflows/go.yml)
+[![Go](https://github.com/go-imports-organizer/goio/actions/workflows/go.yml/badge.svg)](https://github.com/go-imports-organizer/goio/actions/workflows/go.yml) [![Go Reference](https://pkg.go.dev/badge/github.com/go-imports-organizer/goio.svg)](https://pkg.go.dev/github.com/go-imports-organizer/goio)
 # goio
 A customizable imports organizer for the Go programming language
 
