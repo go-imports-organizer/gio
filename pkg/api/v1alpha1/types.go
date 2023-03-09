@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package v1
+package v1alpha1
 
 import (
 	"regexp"
@@ -35,10 +35,9 @@ type Exclude struct {
 }
 
 type Group struct {
-	MatchOrder   int
-	DisplayOrder int
-	Description  string
-	RegExp       string
+	MatchOrder  int
+	Description string
+	RegExp      []string
 }
 
 const (

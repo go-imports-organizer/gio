@@ -4,18 +4,18 @@ import (
 	"regexp"
 	"strings"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
-func Build(excludes []v1.Exclude) (*regexp.Regexp, *regexp.Regexp) {
+func Build(excludes []v1alpha1.Exclude) (*regexp.Regexp, *regexp.Regexp) {
 	var excludeByPath []string
 	var excludeByName []string
 
 	for _, exclude := range excludes {
 		switch exclude.MatchType {
-		case v1.ExcludeMatchTypeName:
+		case v1alpha1.ExcludeMatchTypeName:
 			excludeByName = append(excludeByName, exclude.RegExp)
-		case v1.ExcludeMatchTypeRelativePath:
+		case v1alpha1.ExcludeMatchTypeRelativePath:
 			excludeByPath = append(excludeByPath, exclude.RegExp)
 		}
 	}

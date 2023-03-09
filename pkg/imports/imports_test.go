@@ -18,10 +18,11 @@ package imports
 import (
 	"bytes"
 	"go/ast"
+	"reflect"
 	"sync"
 	"testing"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 	"github.com/go-imports-organizer/goio/pkg/groups"
 )
 
@@ -93,24 +94,24 @@ func main() {}
 			name: "kubernetes imports",
 			args: args{
 				input: []byte(`imports (
-	"k8s.io/api/core/v1",
+	"k8s.io/api/core/v1alpha1",
 	"k8s.io/apimachinery/pkg/api/errors",
-	"k8s.io/apimachinery/pkg/apis/meta/v1",
+	"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 	"k8s.io/apimachinery/pkg/util/sets",
 	"k8s.io/apimachinery/pkg/util/uuid",
 	"k8s.io/apimachinery/pkg/util/wait",
 )
 `),
 				breaks: []string{
-					"k8s.io/apimachinery/pkg/apis/meta/v1",
+					"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 					"k8s.io/apimachinery/pkg/util/uuid",
 				},
 			},
 			want: []byte(`imports (
-	"k8s.io/api/core/v1",
+	"k8s.io/api/core/v1alpha1",
 	"k8s.io/apimachinery/pkg/api/errors",
 
-	"k8s.io/apimachinery/pkg/apis/meta/v1",
+	"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 	"k8s.io/apimachinery/pkg/util/sets",
 
 	"k8s.io/apimachinery/pkg/util/uuid",
@@ -122,8 +123,8 @@ func main() {}
 			name: "openshift imports",
 			args: args{
 				input: []byte(`imports (
-	"github.com/openshift/api/build/v1",
-	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+	"github.com/openshift/api/build/v1alpha1",
+	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 	"github.com/openshift/imagebuilder",
 	"github.com/openshift/imagebuilder/dockerfile/command",
 	"github.com/openshift/imagebuilder/dockerfile/parser",
@@ -140,8 +141,8 @@ func main() {}
 				},
 			},
 			want: []byte(`imports (
-	"github.com/openshift/api/build/v1",
-	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+	"github.com/openshift/api/build/v1alpha1",
+	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 	"github.com/openshift/imagebuilder",
 
 	"github.com/openshift/imagebuilder/dockerfile/command",
@@ -163,14 +164,14 @@ func main() {}
 	"io",
 	"reflect",
 	"sort",
-	"k8s.io/api/core/v1",
+	"k8s.io/api/core/v1alpha1",
 	"k8s.io/apimachinery/pkg/api/errors",
-	"k8s.io/apimachinery/pkg/apis/meta/v1",
+	"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 	"k8s.io/apimachinery/pkg/util/sets",
 	"k8s.io/apimachinery/pkg/util/uuid",
 	"k8s.io/apimachinery/pkg/util/wait",
-	"github.com/openshift/api/build/v1",
-	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+	"github.com/openshift/api/build/v1alpha1",
+	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 	"github.com/openshift/imagebuilder",
 	"github.com/openshift/imagebuilder/dockerfile/command",
 	"github.com/openshift/imagebuilder/dockerfile/parser",
@@ -182,7 +183,7 @@ func main() {}
 `),
 				breaks: []string{
 					"k8s.io/apimachinery/pkg/util/sets",
-					"github.com/openshift/api/build/v1",
+					"github.com/openshift/api/build/v1alpha1",
 					"github.com/openshift/imagebuilder/dockerfile/parser",
 					"github.com/openshift/source-to-image/pkg/scm/git",
 				},
@@ -192,16 +193,16 @@ func main() {}
 	"io",
 	"reflect",
 	"sort",
-	"k8s.io/api/core/v1",
+	"k8s.io/api/core/v1alpha1",
 	"k8s.io/apimachinery/pkg/api/errors",
-	"k8s.io/apimachinery/pkg/apis/meta/v1",
+	"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 
 	"k8s.io/apimachinery/pkg/util/sets",
 	"k8s.io/apimachinery/pkg/util/uuid",
 	"k8s.io/apimachinery/pkg/util/wait",
 
-	"github.com/openshift/api/build/v1",
-	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+	"github.com/openshift/api/build/v1alpha1",
+	"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 	"github.com/openshift/imagebuilder",
 	"github.com/openshift/imagebuilder/dockerfile/command",
 
@@ -233,7 +234,7 @@ func main() {}
 
 func TestFormat(t *testing.T) {
 	type args struct {
-		regExpMatchers []v1.RegExpMatcher
+		regExpMatchers []v1alpha1.RegExpMatcher
 		displayOrder   []string
 		listOnly       *bool
 	}
@@ -257,7 +258,7 @@ func TestFormat(t *testing.T) {
 func TestPopulateGroups(t *testing.T) {
 	type args struct {
 		imports      []*ast.ImportSpec
-		groups       []v1.Group
+		groups       []v1alpha1.Group
 		goModuleName string
 	}
 	tests := []struct {
@@ -286,24 +287,21 @@ func TestPopulateGroups(t *testing.T) {
 						},
 					},
 				},
-				groups: []v1.Group{
+				groups: []v1alpha1.Group{
 					{
-						MatchOrder:   0,
-						DisplayOrder: 2,
-						Description:  "module",
-						RegExp:       "%{module}%",
+						MatchOrder:  0,
+						Description: "module",
+						RegExp:      []string{"%{module}%"},
 					},
 					{
-						MatchOrder:   1,
-						DisplayOrder: 0,
-						Description:  "standard",
-						RegExp:       `^[a-zA-Z0-9\\/]+$`,
+						MatchOrder:  1,
+						Description: "standard",
+						RegExp:      []string{`^[a-zA-Z0-9\\/]+$`},
 					},
 					{
-						MatchOrder:   2,
-						DisplayOrder: 1,
-						Description:  "other",
-						RegExp:       `[a-zA-Z0-9]+\\.[a-zA-Z0-9]+/`,
+						MatchOrder:  2,
+						Description: "other",
+						RegExp:      []string{`[a-zA-Z0-9]+\\.[a-zA-Z0-9]+/`},
 					},
 				},
 				goModuleName: "github.com/exampleOne/module",
@@ -356,8 +354,6 @@ func TestPopulateGroups(t *testing.T) {
 	}
 }
 
-// Needs to be implemented
-/*
 func TestInsertGroups(t *testing.T) {
 	type args struct {
 		f            *ast.File
@@ -384,4 +380,4 @@ func TestInsertGroups(t *testing.T) {
 			}
 		})
 	}
-}*/
+}

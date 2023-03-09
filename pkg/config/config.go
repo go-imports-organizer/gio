@@ -6,19 +6,19 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
-func Load(file string) (v1.Config, error) {
+func Load(file string) (v1alpha1.Config, error) {
 	var configFile []byte
 	var err error
 	if configFile, err = os.ReadFile(file); err != nil {
-		return v1.Config{}, fmt.Errorf("unable to read configuration file %s: %s", file, err.Error())
+		return v1alpha1.Config{}, fmt.Errorf("unable to read configuration file %s: %s", file, err.Error())
 	}
 
-	var config v1.Config
+	var config v1alpha1.Config
 	if err = yaml.Unmarshal(configFile, &config); err != nil {
-		return v1.Config{}, fmt.Errorf("unable to unmarshal file %s: %s", file, err.Error())
+		return v1alpha1.Config{}, fmt.Errorf("unable to unmarshal file %s: %s", file, err.Error())
 	}
 
 	return config, nil

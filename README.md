@@ -99,7 +99,7 @@ Lets `goio` know whether to match agains the files `name` or the files `path` re
 ### Groups
 An array of Group definitions
 
-Each group definition is a rule that tells `goio` how you would like the `imports` in your Go files organized. Each definition represents a block of import statements, describing the order in which that block should be displayed and how to identify the items that it should contain.
+Each group definition is a rule that tells `goio` how you would like the `imports` in your Go files organized. Each definition represents a block of import statements, describing how to identify the items that it should contain. Group blocks are displayed in **the order that they appear in the array**.
 
 #### Description
 A string, valid values are any valid string value
@@ -107,11 +107,11 @@ A string, valid values are any valid string value
 A friendly name to identify the definition by instead of trying to decipher the regular expression each time to remember what it does.
 
 #### RegExp
-A string, valid values are any valid Go regular expression.
+An array of strings, valid values are any valid Go regular expression.
 
 A well formatted Regular Expression that is used to match against. Be as specific as possible.
 
-Note:
+**Note:**
 
 There is one keyword that is available for the RegExp value that is a special keyword, it is `%{module}%`. This keyword automatically creates a regular expression that matches the current module name as defined by the go.mod file. To ensure that it captures the correct imports you should always set the `MatchOrder` to `0` for this definition.
 
@@ -121,9 +121,3 @@ An integer, valid values are -n...n
 Tells `goio` which order the definitions should be matched against in. Lower numbers are first, higher numbers are last.
 
 It is important to ensure the correct `matchorder` is used, expecially if any of your `regexp` have any kind of overlap, such as having a module name of `github.com/example/mymodule` and a group definition for `github.com/example`. You would want to make sure that your `module` definition was matched first or those imports would get rolled into the `github.com/example` one because it is less specific.
-
-
-#### DisplayOrder
-An integer, valid values are -n...n
-
-The order in which the blocks of imports should be displayed in each file. Lower numbers are first, higher numbers are last
