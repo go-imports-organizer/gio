@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
 )
 
 func TestLoad(t *testing.T) {

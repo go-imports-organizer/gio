@@ -1,5 +1,5 @@
 # How the Red Hat OpenShift organization (github.com/openshift) organizes their imports
-# See https://github.com/go-imports-organizer/gio/blob/main/README.md for more information
+# See https://github.com/go-imports-organizer/goio/blob/main/README.md for more information
 excludes:
   - matchtype: name
     regexp: ^\.git$

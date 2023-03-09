@@ -26,7 +26,7 @@ verify-gofmt: ## Run gofmt verifications. Example: make verify-gofmt
 	scripts/verify-gofmt.sh
 .PHONY: verify
 
-imports: ## Organize imports in go files using gio. Example: make imports
+imports: ## Organize imports in go files using goio. Example: make imports
 	go run main.go
 .PHONY: imports
 
@@ -40,7 +40,7 @@ build: ## Build the executable. Example: make build
 .PHONY: build
 
 clean: ## Clean up the workspace. Example: make clean
-	rm -rf .gio *.pprof profile*
+	rm -rf .goio *.pprof profile*
 .PHONY: clean
 
 help: ## Print this help. Example: make help

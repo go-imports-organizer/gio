@@ -21,8 +21,8 @@ import (
 	"sync"
 	"testing"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
-	"github.com/go-imports-organizer/gio/pkg/groups"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	"github.com/go-imports-organizer/goio/pkg/groups"
 )
 
 func TestAddSpaces(t *testing.T) {

@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strings"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
-	"github.com/go-imports-organizer/gio/pkg/sorter"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	"github.com/go-imports-organizer/goio/pkg/sorter"
 )
 
 func Build(groups []v1.Group, goModuleName string) ([]v1.RegExpMatcher, []string) {

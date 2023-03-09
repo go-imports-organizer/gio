@@ -26,12 +26,12 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/go-imports-organizer/gio/pkg/config"
-	"github.com/go-imports-organizer/gio/pkg/excludes"
-	"github.com/go-imports-organizer/gio/pkg/groups"
-	"github.com/go-imports-organizer/gio/pkg/imports"
-	"github.com/go-imports-organizer/gio/pkg/module"
-	"github.com/go-imports-organizer/gio/pkg/version"
+	"github.com/go-imports-organizer/goio/pkg/config"
+	"github.com/go-imports-organizer/goio/pkg/excludes"
+	"github.com/go-imports-organizer/goio/pkg/groups"
+	"github.com/go-imports-organizer/goio/pkg/imports"
+	"github.com/go-imports-organizer/goio/pkg/module"
+	"github.com/go-imports-organizer/goio/pkg/version"
 )
 
 var (
@@ -71,8 +71,8 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Load the configuration from the gio.yaml file
-	conf, err := config.Load("gio.yaml")
+	// Load the configuration from the goio.yaml file
+	conf, err := config.Load("goio.yaml")
 	if err != nil {
 		log.Fatalf("%s", err.Error())
 	}

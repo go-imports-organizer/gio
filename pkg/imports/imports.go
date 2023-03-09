@@ -35,8 +35,8 @@ import (
 	"strings"
 	"sync"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
-	"github.com/go-imports-organizer/gio/pkg/sorter"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	"github.com/go-imports-organizer/goio/pkg/sorter"
 )
 
 // borrowed from https://github.com/golang/tools/blob/71482053b885ea3938876d1306ad8a1e4037f367/internal/imports/imports.go#L380

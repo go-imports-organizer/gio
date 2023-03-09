@@ -18,7 +18,7 @@ package sorter
 import (
 	"go/ast"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
 )
 
 type SortImportsByPathValue []ast.ImportSpec

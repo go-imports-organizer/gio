@@ -1,6 +1,6 @@
-module github.com/go-imports-organizer/gio
+module github.com/go-imports-organizer/goio
 
-go 1.20
+go 1.19
 
 require (
 	golang.org/x/mod v0.9.0

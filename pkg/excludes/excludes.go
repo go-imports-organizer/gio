@@ -4,7 +4,7 @@ import (
 	"regexp"
 	"strings"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
 )
 
 func Build(excludes []v1.Exclude) (*regexp.Regexp, *regexp.Regexp) {

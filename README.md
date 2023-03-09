@@ -15,7 +15,7 @@
 # limitations under the License.
 #
 -->
-# gio
+# goio
 A customizable imports organizer for the Go programming language
 
 * [Summary](#summary)
@@ -23,23 +23,23 @@ A customizable imports organizer for the Go programming language
 * [Configuration](#configuration)
 
 # <a name='summary'></a>Summary
-`gio` is a fully customizable Go imports organizer. The configuration
-is project based and is stored in a `gio.yaml` file in the root of your
+`goio` is a fully customizable Go imports organizer. The configuration
+is project based and is stored in a `goio.yaml` file in the root of your
 module's project folder alongside the `go.mod` file. For consistency
-the `gio.yaml` file should be committed to your projects vcs.
+the `goio.yaml` file should be committed to your projects vcs.
 
 # <a name='installation'></a>Installation
 
 ## Command Line Tool
 
 ```
-  $ go install github.com/go-imports-organizer/gio@latest
+  $ go install github.com/go-imports-organizer/goio@latest
 ```
 
 ## Go project configuration
 
 ### Example scripts/tools.go file
-This file will ensure that the `github.com/go-imports-organizer/gio` repo is vendored into your project.
+This file will ensure that the `github.com/go-imports-organizer/goio` repo is vendored into your project.
 ```
 //go:build tools
 // +build tools
@@ -48,7 +48,7 @@ package hack
 
 // Add tools that scripts depend on here, to ensure they are vendored.
 import (
-	_ "github.com/go-imports-organizer/gio"
+	_ "github.com/go-imports-organizer/goio"
 )
 
 ```
@@ -58,9 +58,9 @@ This file will check if there are any go files that need to be formatted. If the
 ```
 #!/bin/bash
 
-bad_files=$(go run ./vendor/github.com/go-imports-organizer/gio -l)
+bad_files=$(go run ./vendor/github.com/go-imports-organizer/goio -l)
 if [[ -n "${bad_files}" ]]; then
-        echo "!!! gio needs to be run on the following files:"
+        echo "!!! goio needs to be run on the following files:"
         echo "${bad_files}"
         echo "Try running 'make imports'"
         exit 1
@@ -69,8 +69,8 @@ fi
 
 ### Example Makefile sections
 ```
-imports: ## Organize imports in go files using gio. Example: make imports
-	go run ./vendor/github.com/go-imports-organizer/gio
+imports: ## Organize imports in go files using goio. Example: make imports
+	go run ./vendor/github.com/go-imports-organizer/goio
 .PHONY: imports
 
 verify-imports: ## Run import verifications. Example: make verify-imports
@@ -79,12 +79,12 @@ verify-imports: ## Run import verifications. Example: make verify-imports
 ```
 
 # <a name='Configuration'></a>Configuration
-The `gio.yaml` configuration file is a well formatted yaml file.
+The `goio.yaml` configuration file is a well formatted yaml file.
 
 ### Excludes
 An array of Exclude definitions.
 
-Each Exclude definition is a rule that tells `gio` which files and folders to ignore while looking for Go files that it should organize the imports of. The default configuration file ignores the `.git` directory and the `vendor` directory. The more files and folders that you can ignore at this stage the faster `gio` will run.
+Each Exclude definition is a rule that tells `goio` which files and folders to ignore while looking for Go files that it should organize the imports of. The default configuration file ignores the `.git` directory and the `vendor` directory. The more files and folders that you can ignore at this stage the faster `goio` will run.
 
 #### RegExp
 A string, valid values are any valid Go regular expression.
@@ -94,12 +94,12 @@ A well formatted Regular Expression that is used to match against. Be as specifi
 #### MatchType
 A string, valid values are `[name, path]`.
 
-Lets `gio` know whether to match agains the files `name` or the files `path` relative to the modules root directory _(where the go.mod file is located)_.
+Lets `goio` know whether to match agains the files `name` or the files `path` relative to the modules root directory _(where the go.mod file is located)_.
 
 ### Groups
 An array of Group definitions
 
-Each group definition is a rule that tells `gio` how you would like the `imports` in your Go files organized. Each definition represents a block of import statements, describing the order in which that block should be displayed and how to identify the items that it should contain.
+Each group definition is a rule that tells `goio` how you would like the `imports` in your Go files organized. Each definition represents a block of import statements, describing the order in which that block should be displayed and how to identify the items that it should contain.
 
 #### Description
 A string, valid values are any valid string value
@@ -118,7 +118,7 @@ There is one keyword that is available for the RegExp value that is a special ke
 #### MatchOrder
 An integer, valid values are -n...n
 
-Tells `gio` which order the definitions should be matched against in. Lower numbers are first, higher numbers are last.
+Tells `goio` which order the definitions should be matched against in. Lower numbers are first, higher numbers are last.
 
 It is important to ensure the correct `matchorder` is used, expecially if any of your `regexp` have any kind of overlap, such as having a module name of `github.com/example/mymodule` and a group definition for `github.com/example`. You would want to make sure that your `module` definition was matched first or those imports would get rolled into the `github.com/example` one because it is less specific.
 

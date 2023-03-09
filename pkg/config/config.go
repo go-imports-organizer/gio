@@ -6,7 +6,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	v1 "github.com/go-imports-organizer/gio/pkg/api/v1"
+	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
 )
 
 func Load(file string) (v1.Config, error) {
