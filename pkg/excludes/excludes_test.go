@@ -5,12 +5,12 @@ import (
 	"regexp"
 	"testing"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
 func TestBuild(t *testing.T) {
 	type args struct {
-		excludes []v1.Exclude
+		excludes []v1alpha1.Exclude
 	}
 	tests := []struct {
 		name             string
@@ -21,7 +21,7 @@ func TestBuild(t *testing.T) {
 		{
 			name: "only name excludes",
 			args: args{
-				excludes: []v1.Exclude{
+				excludes: []v1alpha1.Exclude{
 					{
 						MatchType: "name",
 						RegExp:    "^name-one$",
@@ -38,7 +38,7 @@ func TestBuild(t *testing.T) {
 		{
 			name: "only path excludes",
 			args: args{
-				excludes: []v1.Exclude{
+				excludes: []v1alpha1.Exclude{
 					{
 						MatchType: "path",
 						RegExp:    "^path-one$",
@@ -55,7 +55,7 @@ func TestBuild(t *testing.T) {
 		{
 			name: "name and path excludes",
 			args: args{
-				excludes: []v1.Exclude{
+				excludes: []v1alpha1.Exclude{
 					{
 						MatchType: "name",
 						RegExp:    "^name-one$",

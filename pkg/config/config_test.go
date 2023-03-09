@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
 func TestLoad(t *testing.T) {
@@ -15,7 +15,7 @@ func TestLoad(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		want       v1.Config
+		want       v1alpha1.Config
 		wantErr    bool
 		wantErrMsg string
 	}{
@@ -24,8 +24,8 @@ func TestLoad(t *testing.T) {
 			args: args{
 				file: "../../test/testdata/config/works.yaml",
 			},
-			want: v1.Config{
-				Excludes: []v1.Exclude{
+			want: v1alpha1.Config{
+				Excludes: []v1alpha1.Exclude{
 					{
 						MatchType: "name",
 						RegExp:    "^\\.git$",
@@ -35,24 +35,21 @@ func TestLoad(t *testing.T) {
 						RegExp:    "^vendor$",
 					},
 				},
-				Groups: []v1.Group{
+				Groups: []v1alpha1.Group{
 					{
-						MatchOrder:   0,
-						DisplayOrder: 2,
-						Description:  "module",
-						RegExp:       "%{module}%",
+						MatchOrder:  0,
+						Description: "module",
+						RegExp:      []string{"%{module}%"},
 					},
 					{
-						MatchOrder:   1,
-						DisplayOrder: 0,
-						Description:  "standard",
-						RegExp:       "^[a-zA-Z0-9\\/]+$",
+						MatchOrder:  1,
+						Description: "standard",
+						RegExp:      []string{"^[a-zA-Z0-9\\/]+$"},
 					},
 					{
-						MatchOrder:   2,
-						DisplayOrder: 1,
-						Description:  "other",
-						RegExp:       "[a-zA-Z0-9]+\\.[a-zA-Z0-9]+/",
+						MatchOrder:  2,
+						Description: "other",
+						RegExp:      []string{"[a-zA-Z0-9]+\\.[a-zA-Z0-9]+/"},
 					},
 				},
 			},
@@ -64,7 +61,7 @@ func TestLoad(t *testing.T) {
 			args: args{
 				file: "../../test/testdata/config/malformed.yaml",
 			},
-			want:       v1.Config{},
+			want:       v1alpha1.Config{},
 			wantErr:    true,
 			wantErrMsg: "unable to unmarshal file",
 		},
@@ -73,7 +70,7 @@ func TestLoad(t *testing.T) {
 			args: args{
 				file: "../../test/testdata/config/notexist.yaml",
 			},
-			want:       v1.Config{},
+			want:       v1alpha1.Config{},
 			wantErr:    true,
 			wantErrMsg: "unable to read configuration file",
 		},

@@ -21,7 +21,7 @@ import (
 	"sort"
 	"testing"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
 func TestSortImportsByPathValue(t *testing.T) {
@@ -56,16 +56,16 @@ func TestSortImportsByPathValue(t *testing.T) {
 				imports: []string{
 					"k8s.io/apimachinery/pkg/api/errors",
 					"k8s.io/apimachinery/pkg/util/wait",
-					"k8s.io/apimachinery/pkg/apis/meta/v1",
+					"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 					"k8s.io/apimachinery/pkg/util/uuid",
 					"k8s.io/apimachinery/pkg/util/sets",
-					"k8s.io/api/core/v1",
+					"k8s.io/api/core/v1alpha1",
 				},
 			},
 			want: []string{
-				"k8s.io/api/core/v1",
+				"k8s.io/api/core/v1alpha1",
 				"k8s.io/apimachinery/pkg/api/errors",
-				"k8s.io/apimachinery/pkg/apis/meta/v1",
+				"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 				"k8s.io/apimachinery/pkg/util/sets",
 				"k8s.io/apimachinery/pkg/util/uuid",
 				"k8s.io/apimachinery/pkg/util/wait",
@@ -75,20 +75,20 @@ func TestSortImportsByPathValue(t *testing.T) {
 			name: "sort openshift imports",
 			args: args{
 				imports: []string{
-					"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+					"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 					"github.com/openshift/library-go/pkg/git",
 					"github.com/openshift/imagebuilder",
 					"github.com/openshift/source-to-image/pkg/util",
 					"github.com/openshift/imagebuilder/dockerfile/command",
-					"github.com/openshift/api/build/v1",
+					"github.com/openshift/api/build/v1alpha1",
 					"github.com/openshift/library-go/pkg/image/reference",
 					"github.com/openshift/imagebuilder/dockerfile/parser",
 					"github.com/openshift/source-to-image/pkg/scm/git",
 				},
 			},
 			want: []string{
-				"github.com/openshift/api/build/v1",
-				"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+				"github.com/openshift/api/build/v1alpha1",
+				"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 				"github.com/openshift/imagebuilder",
 				"github.com/openshift/imagebuilder/dockerfile/command",
 				"github.com/openshift/imagebuilder/dockerfile/parser",
@@ -102,12 +102,12 @@ func TestSortImportsByPathValue(t *testing.T) {
 			name: "sort mixed imports",
 			args: args{
 				imports: []string{
-					"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+					"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 					"github.com/openshift/library-go/pkg/git",
 					"github.com/openshift/imagebuilder",
 					"github.com/openshift/source-to-image/pkg/util",
 					"github.com/openshift/imagebuilder/dockerfile/command",
-					"github.com/openshift/api/build/v1",
+					"github.com/openshift/api/build/v1alpha1",
 					"github.com/openshift/library-go/pkg/image/reference",
 					"github.com/openshift/imagebuilder/dockerfile/parser",
 					"github.com/openshift/source-to-image/pkg/scm/git",
@@ -117,16 +117,16 @@ func TestSortImportsByPathValue(t *testing.T) {
 					"io",
 					"k8s.io/apimachinery/pkg/api/errors",
 					"k8s.io/apimachinery/pkg/util/wait",
-					"k8s.io/apimachinery/pkg/apis/meta/v1",
+					"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 					"k8s.io/apimachinery/pkg/util/uuid",
 					"k8s.io/apimachinery/pkg/util/sets",
-					"k8s.io/api/core/v1",
+					"k8s.io/api/core/v1alpha1",
 				},
 			},
 			want: []string{
 				"fmt",
-				"github.com/openshift/api/build/v1",
-				"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1",
+				"github.com/openshift/api/build/v1alpha1",
+				"github.com/openshift/client-go/build/clientset/versioned/typed/build/v1alpha1",
 				"github.com/openshift/imagebuilder",
 				"github.com/openshift/imagebuilder/dockerfile/command",
 				"github.com/openshift/imagebuilder/dockerfile/parser",
@@ -135,9 +135,9 @@ func TestSortImportsByPathValue(t *testing.T) {
 				"github.com/openshift/source-to-image/pkg/scm/git",
 				"github.com/openshift/source-to-image/pkg/util",
 				"io",
-				"k8s.io/api/core/v1",
+				"k8s.io/api/core/v1alpha1",
 				"k8s.io/apimachinery/pkg/api/errors",
-				"k8s.io/apimachinery/pkg/apis/meta/v1",
+				"k8s.io/apimachinery/pkg/apis/meta/v1alpha1",
 				"k8s.io/apimachinery/pkg/util/sets",
 				"k8s.io/apimachinery/pkg/util/uuid",
 				"k8s.io/apimachinery/pkg/util/wait",
@@ -171,79 +171,69 @@ func TestSortImportsByPathValue(t *testing.T) {
 
 func TestSortGroupsByMatchOrder(t *testing.T) {
 	type args struct {
-		groups []v1.Group
+		groups []v1alpha1.Group
 	}
 	tests := []struct {
 		name string
 		args args
-		want []v1.Group
+		want []v1alpha1.Group
 	}{
 		{
 			name: "sort groups one",
 			args: args{
-				groups: []v1.Group{
+				groups: []v1alpha1.Group{
 					{
-						MatchOrder:   3,
-						DisplayOrder: 3,
-						Description:  "Group 3",
-						RegExp:       "group-3-regexp",
+						MatchOrder:  3,
+						Description: "Group 3",
+						RegExp:      []string{"group-3-regexp"},
 					},
 					{
-						MatchOrder:   5,
-						DisplayOrder: 1,
-						Description:  "Group 5",
-						RegExp:       "group-5-regexp",
+						MatchOrder:  5,
+						Description: "Group 5",
+						RegExp:      []string{"group-5-regexp"},
 					},
 					{
-						MatchOrder:   2,
-						DisplayOrder: 4,
-						Description:  "Group 2",
-						RegExp:       "group-2-regexp",
+						MatchOrder:  2,
+						Description: "Group 2",
+						RegExp:      []string{"group-2-regexp"},
 					},
 					{
-						MatchOrder:   1,
-						DisplayOrder: 5,
-						Description:  "Group 1",
-						RegExp:       "group-1-regexp",
+						MatchOrder:  1,
+						Description: "Group 1",
+						RegExp:      []string{"group-1-regexp"},
 					},
 					{
-						MatchOrder:   4,
-						DisplayOrder: 2,
-						Description:  "Group 4",
-						RegExp:       "group-4-regexp",
+						MatchOrder:  4,
+						Description: "Group 4",
+						RegExp:      []string{"group-4-regexp"},
 					},
 				},
 			},
-			want: []v1.Group{
+			want: []v1alpha1.Group{
 				{
-					MatchOrder:   1,
-					DisplayOrder: 5,
-					Description:  "Group 1",
-					RegExp:       "group-1-regexp",
+					MatchOrder:  1,
+					Description: "Group 1",
+					RegExp:      []string{"group-1-regexp"},
 				},
 				{
-					MatchOrder:   2,
-					DisplayOrder: 4,
-					Description:  "Group 2",
-					RegExp:       "group-2-regexp",
+					MatchOrder:  2,
+					Description: "Group 2",
+					RegExp:      []string{"group-2-regexp"},
 				},
 				{
-					MatchOrder:   3,
-					DisplayOrder: 3,
-					Description:  "Group 3",
-					RegExp:       "group-3-regexp",
+					MatchOrder:  3,
+					Description: "Group 3",
+					RegExp:      []string{"group-3-regexp"},
 				},
 				{
-					MatchOrder:   4,
-					DisplayOrder: 2,
-					Description:  "Group 4",
-					RegExp:       "group-4-regexp",
+					MatchOrder:  4,
+					Description: "Group 4",
+					RegExp:      []string{"group-4-regexp"},
 				},
 				{
-					MatchOrder:   5,
-					DisplayOrder: 1,
-					Description:  "Group 5",
-					RegExp:       "group-5-regexp",
+					MatchOrder:  5,
+					Description: "Group 5",
+					RegExp:      []string{"group-5-regexp"},
 				},
 			},
 		},
@@ -254,96 +244,6 @@ func TestSortGroupsByMatchOrder(t *testing.T) {
 
 			if !reflect.DeepEqual(tt.args.groups, tt.want) {
 				t.Errorf("SortGroupsByMatchOrder() = %v, want %v", tt.args.groups, tt.want)
-			}
-		})
-	}
-}
-
-func TestSortGroupsByDisplayOrder(t *testing.T) {
-	type args struct {
-		groups []v1.Group
-	}
-	tests := []struct {
-		name string
-		args args
-		want []v1.Group
-	}{
-		{
-			name: "sort groups one",
-			args: args{
-				groups: []v1.Group{
-					{
-						MatchOrder:   3,
-						DisplayOrder: 3,
-						Description:  "Group 3",
-						RegExp:       "group-3-regexp",
-					},
-					{
-						MatchOrder:   5,
-						DisplayOrder: 1,
-						Description:  "Group 5",
-						RegExp:       "group-5-regexp",
-					},
-					{
-						MatchOrder:   2,
-						DisplayOrder: 4,
-						Description:  "Group 2",
-						RegExp:       "group-2-regexp",
-					},
-					{
-						MatchOrder:   1,
-						DisplayOrder: 5,
-						Description:  "Group 1",
-						RegExp:       "group-1-regexp",
-					},
-					{
-						MatchOrder:   4,
-						DisplayOrder: 2,
-						Description:  "Group 4",
-						RegExp:       "group-4-regexp",
-					},
-				},
-			},
-			want: []v1.Group{
-				{
-					MatchOrder:   5,
-					DisplayOrder: 1,
-					Description:  "Group 5",
-					RegExp:       "group-5-regexp",
-				},
-				{
-					MatchOrder:   4,
-					DisplayOrder: 2,
-					Description:  "Group 4",
-					RegExp:       "group-4-regexp",
-				},
-				{
-					MatchOrder:   3,
-					DisplayOrder: 3,
-					Description:  "Group 3",
-					RegExp:       "group-3-regexp",
-				},
-				{
-					MatchOrder:   2,
-					DisplayOrder: 4,
-					Description:  "Group 2",
-					RegExp:       "group-2-regexp",
-				},
-				{
-					MatchOrder:   1,
-					DisplayOrder: 5,
-					Description:  "Group 1",
-					RegExp:       "group-1-regexp",
-				},
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			sort.Sort(SortGroupsByDisplayOrder(tt.args.groups))
-
-			if !reflect.DeepEqual(tt.args.groups, tt.want) {
-				t.Errorf("SortGroupsByDisplayOrder() = %v, want %v", tt.args.groups, tt.want)
 			}
 		})
 	}

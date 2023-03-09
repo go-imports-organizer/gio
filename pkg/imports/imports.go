@@ -35,7 +35,7 @@ import (
 	"strings"
 	"sync"
 
-	v1 "github.com/go-imports-organizer/goio/pkg/api/v1"
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 	"github.com/go-imports-organizer/goio/pkg/sorter"
 )
 
@@ -76,7 +76,7 @@ func AddSpaces(r io.Reader, breaks []string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
-func PopulateGroups(importGroups map[string][]ast.ImportSpec, regExpMatchers []v1.RegExpMatcher, imports []*ast.ImportSpec) error {
+func PopulateGroups(importGroups map[string][]ast.ImportSpec, regExpMatchers []v1alpha1.RegExpMatcher, imports []*ast.ImportSpec) error {
 	for _, i := range imports {
 		if len(i.Path.Value) == 0 {
 			continue
@@ -133,7 +133,7 @@ func InsertGroups(f *ast.File, importGroups map[string][]ast.ImportSpec, display
 }
 
 // Format takes a channel of file paths and formats the files imports
-func Format(files *chan string, wg *sync.WaitGroup, groupRegExpMatchers []v1.RegExpMatcher, displayOrder []string, listOnly *bool) {
+func Format(files *chan string, wg *sync.WaitGroup, groupRegExpMatchers []v1alpha1.RegExpMatcher, displayOrder []string, listOnly *bool) {
 	defer wg.Done()
 	for path := range *files {
 

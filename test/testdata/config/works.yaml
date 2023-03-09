@@ -7,14 +7,14 @@ excludes:
     regexp: ^vendor$
 groups:
   - description: module
-    displayorder: 2
     matchorder: 0
-    regexp: "%{module}%"
+    regexp:
+      - "%{module}%"
   - description: standard
-    displayorder: 0
     matchorder: 1
-    regexp: ^[a-zA-Z0-9\/]+$
+    regexp:
+      - ^[a-zA-Z0-9\/]+$
   - description: other
-    displayorder: 1
     matchorder: 2
-    regexp: '[a-zA-Z0-9]+\.[a-zA-Z0-9]+/'
+    regexp:
+      - '[a-zA-Z0-9]+\.[a-zA-Z0-9]+/'
