@@ -7,7 +7,7 @@ excludes:
     regexp: ^vendor$
 groups:
   - description: standard
-    matchorder: 0
+    matchorder: 3
     regexp:
       - ^[a-zA-Z0-9\/]+$
   - description: kubernetes
@@ -15,7 +15,7 @@ groups:
     regexp:
       - ^k8s\.io
   - description: openshift
-    matchorder: 3
+    matchorder: 2
     regexp:
       - ^github\.com\/openshift
   - description: other
@@ -23,6 +23,6 @@ groups:
     regexp:
       - '[a-zA-Z0-9]+\.[a-zA-Z0-9]+/'
   - description: module
-    matchorder: 2
+    matchorder: 0
     regexp:
       - "%{module}%"

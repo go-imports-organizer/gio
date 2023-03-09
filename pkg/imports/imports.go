@@ -27,7 +27,6 @@ import (
 	"go/scanner"
 	"go/token"
 	"io"
-	"log"
 	"os"
 	"regexp"
 	"sort"
@@ -39,6 +38,7 @@ import (
 	"github.com/go-imports-organizer/goio/pkg/sorter"
 )
 
+// AddSpaces adds empty lines (spaces) between the groups of imports
 // borrowed from https://github.com/golang/tools/blob/71482053b885ea3938876d1306ad8a1e4037f367/internal/imports/imports.go#L380
 func AddSpaces(r io.Reader, breaks []string) ([]byte, error) {
 	var out bytes.Buffer
@@ -76,6 +76,8 @@ func AddSpaces(r io.Reader, breaks []string) ([]byte, error) {
 	return out.Bytes(), nil
 }
 
+// PopulateGroups assembles the data structure that is used to hold the groups
+// of ImportSpecs as they are organized
 func PopulateGroups(importGroups map[string][]ast.ImportSpec, regExpMatchers []v1alpha1.RegExpMatcher, imports []*ast.ImportSpec) error {
 	for _, i := range imports {
 		if len(i.Path.Value) == 0 {
@@ -103,6 +105,8 @@ func PopulateGroups(importGroups map[string][]ast.ImportSpec, regExpMatchers []v
 	return nil
 }
 
+// InsertGroup places the groups of ImportSpecs into their correct order in the
+// File according to the display order
 func InsertGroups(f *ast.File, importGroups map[string][]ast.ImportSpec, displayOrder []string) ([]string, error) {
 	var breaks []string
 	for _, decl := range f.Decls {
@@ -132,18 +136,18 @@ func InsertGroups(f *ast.File, importGroups map[string][]ast.ImportSpec, display
 	return breaks, nil
 }
 
-// Format takes a channel of file paths and formats the files imports
+// Format processes files as they are added to the queue and organizes the imports
 func Format(files *chan string, wg *sync.WaitGroup, groupRegExpMatchers []v1alpha1.RegExpMatcher, displayOrder []string, listOnly *bool) {
 	defer wg.Done()
 	for path := range *files {
-
 		if len(path) == 0 {
 			continue
 		}
 
 		info, err := os.Stat(path)
 		if err != nil {
-			log.Fatalf("%s", err.Error())
+			fmt.Fprintf(os.Stderr, "unable to stat %q", err.Error())
+			continue
 		}
 		oldModTime := info.ModTime()
 
@@ -153,21 +157,23 @@ func Format(files *chan string, wg *sync.WaitGroup, groupRegExpMatchers []v1alph
 			var scannerErrorList scanner.ErrorList
 			if errors.As(err, &scannerErrorList) {
 				for _, err := range scannerErrorList {
-					log.Fatalf("%s", err)
+					fmt.Fprintf(os.Stderr, "%s", err)
 				}
 			} else {
-				log.Fatalf("%s", err.Error())
+				fmt.Fprintf(os.Stderr, "%s", err.Error())
 			}
 		}
 
 		var importGroups = make(map[string][]ast.ImportSpec)
 		if err := PopulateGroups(importGroups, groupRegExpMatchers, f.Imports); err != nil {
-			log.Fatalf("%s", err)
+			fmt.Fprintf(os.Stderr, "unable to populate import groups for %q: %s", path, err)
+			continue
 		}
 
 		breaks, err := InsertGroups(f, importGroups, displayOrder)
 		if err != nil {
-			log.Fatalf("%s", err.Error())
+			fmt.Fprintf(os.Stderr, "unable to update groups at %q: %s", path, err.Error())
+			continue
 		}
 
 		printerMode := printer.TabIndent
@@ -176,37 +182,41 @@ func Format(files *chan string, wg *sync.WaitGroup, groupRegExpMatchers []v1alph
 
 		var buf bytes.Buffer
 		if err = printConfig.Fprint(&buf, fs, f); err != nil {
-			log.Fatalf("%s", err.Error())
+			fmt.Fprintf(os.Stderr, "unable to load bytes into buffer %q, %s", path, err.Error())
+			continue
 		}
 		out, err := AddSpaces(bytes.NewReader(buf.Bytes()), breaks)
 		if err != nil {
-			log.Fatalf("%s", err.Error())
+			fmt.Fprintf(os.Stderr, "unable to add spaces to %q, %s", path, err.Error())
+			continue
 		}
 		out, err = format.Source(out)
 		if err != nil {
-			log.Fatalf("%s", err.Error())
+			fmt.Fprintf(os.Stderr, "unable to format source %q, %s", path, err.Error())
 		}
 
 		if *listOnly {
 			oldFile, err := os.ReadFile(path)
 			if err != nil {
-				log.Fatalf("unable to read file %q: %s", path, err.Error())
+				fmt.Fprintf(os.Stderr, "unable to read file %q: %s", path, err.Error())
+				continue
 			}
 			if !bytes.Equal(oldFile, out) {
-				log.Printf("%s is not sorted \n", path)
+				fmt.Fprintf(os.Stdout, "%s is not organized \n", path)
 			}
 		}
 
 		info, err = os.Stat(path)
 		if err != nil {
-			log.Fatalf("%s", err.Error())
+			fmt.Fprintf(os.Stderr, "unable to stat %q: %s", path, err.Error())
+			continue
 		}
 		if !info.ModTime().Equal(oldModTime) {
-			log.Printf("%s was modified while formatting, cowardly refusing to overwrite", path)
+			fmt.Fprintf(os.Stderr, "%s was modified while formatting, cowardly refusing to overwrite", path)
 			continue
 		}
 		if err = os.WriteFile(path, out, info.Mode()); err != nil {
-			log.Fatalf("%#v", err)
+			fmt.Fprintf(os.Stderr, "unable to write to path %q, %s", path, err.Error())
 		}
 	}
 }

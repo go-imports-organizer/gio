@@ -17,37 +17,57 @@ package v1alpha1
 
 import (
 	"regexp"
+	"strings"
 )
 
+// RegExpMatcher
 type RegExpMatcher struct {
-	Bucket string
-	RegExp *regexp.Regexp
+	Bucket string         `yaml:"bucket"`
+	RegExp *regexp.Regexp `yaml:"regexp"`
 }
 
 const (
-	ExcludeMatchTypeName         string = "name"
+	// ExcludeMatchTypeName tells an Exclude to match against the file or folder name
+	ExcludeMatchTypeName string = "name"
+	// ExcludeMatchTypeRelativePath tells an Exclude to match against the file or folder path
 	ExcludeMatchTypeRelativePath string = "path"
 )
 
+// Exclude defines a file or folder that should be excluded from being organized
 type Exclude struct {
-	MatchType string
-	RegExp    string
+	// MatchType defines whether the file name or file path should be matched against
+	MatchType string `yaml:"matchtype"`
+	// RegExp is the Regular Expression that is used to match against
+	RegExp string `yaml:"regexp"`
 }
 
+// Group defines a block of imports
 type Group struct {
-	MatchOrder  int
-	Description string
-	RegExp      []string
+	// MatchOrder is the order is which the Regular Expression will be matched
+	// against an import to determine its group
+	MatchOrder int `yaml:"matchorder"`
+	// Description is a friendly name for the group
+	Description string `yaml:"description"`
+	// RegExp is the Regular Expression that is used to match against
+	RegExp []string `yaml:"regexp"`
 }
 
-const (
-	GroupMatchValueStandard          string = "standard"
-	GroupMatchValueModule            string = "module"
-	GroupMatchValueOther             string = "other"
-	GroupMatchValueModulePlaceholder string = "%{module}%"
-)
-
+// Config is the configuration for the Go Imports Organizer
 type Config struct {
-	Excludes []Exclude
-	Groups   []Group
+	// Excludes is a slice of Exclude objects
+	Excludes []Exclude `yaml:"excludes"`
+	// Groups is a slice of Group objects
+	Groups []Group `yaml:"groups"`
+}
+
+// PathListFlags is a type that can store Path objects that are supplied via the -p flag
+type PathListFlags []string
+
+func (i *PathListFlags) String() string {
+	return strings.Join(*i, ",")
+}
+
+func (i *PathListFlags) Set(value string) error {
+	*i = append(*i, value)
+	return nil
 }
