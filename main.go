@@ -42,7 +42,7 @@ var (
 
 func main() {
 	listOnly := flag.Bool("l", false, "only list files that need to be organized (no changes made)")
-	flag.Var(&pathList, "p", "path to a file to organize, use multiple times for multiple files")
+	flag.Var(&pathList, "p", "specify individual paths to organize, use multiple times for multiple paths. defaults to entire module directory")
 	versionOnly := flag.Bool("v", false, "print version and exit")
 	flag.Parse()
 
