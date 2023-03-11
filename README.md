@@ -5,7 +5,7 @@ A customizable imports organizer for the Go programming language
 * [Summary](#summary)
 * [Command Line Tool](#command-line-tool)
 * [CI/CD Integration](#ci-cd-integration)
-* [Configuration](#configuration)
+* [Configuration File](#configuration)
 * [Profiling](#profiling)
 
 # <a name='summary'></a>Summary
