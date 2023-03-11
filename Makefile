@@ -40,7 +40,7 @@ build: ## Build the executable. Example: make build
 .PHONY: build
 
 clean: ## Clean up the workspace. Example: make clean
-	rm -rf .goio *.pprof profile*
+	rm -rf goio *.pprof profile*
 .PHONY: clean
 
 help: ## Print this help. Example: make help

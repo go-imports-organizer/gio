@@ -10,6 +10,8 @@ import (
 	"github.com/go-imports-organizer/goio/pkg/sorter"
 )
 
+// Build asembles the RegExpMatchers that are used to group imports and the
+// array that defines the display order for the groups in the import block
 func Build(groups []v1alpha1.Group, goModuleName string) ([]v1alpha1.RegExpMatcher, []string) {
 	groupRegExpMatchers := []v1alpha1.RegExpMatcher{}
 	displayOrder := []string{}

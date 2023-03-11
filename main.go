@@ -18,7 +18,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -26,6 +25,7 @@ import (
 	"strings"
 	"sync"
 
+	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 	"github.com/go-imports-organizer/goio/pkg/config"
 	"github.com/go-imports-organizer/goio/pkg/excludes"
 	"github.com/go-imports-organizer/goio/pkg/groups"
@@ -35,25 +35,29 @@ import (
 )
 
 var (
-	wg    sync.WaitGroup
-	files = make(chan string)
+	wg       sync.WaitGroup
+	files    = make(chan string)
+	pathList v1alpha1.PathListFlags
 )
 
 func main() {
-	// If the -l flag is set, only return a list of what files would have been formatted, but don't make any changes
-	listOnly := flag.Bool("l", false, "list files that need to be organized (no changes made)")
+	listOnly := flag.Bool("l", false, "only list files that need to be organized (no changes made)")
+	flag.Var(&pathList, "p", "path to a file to organize, use multiple times for multiple files")
 	versionOnly := flag.Bool("v", false, "print version and exit")
 	flag.Parse()
 
 	// set CPUPROFILE=<filename> to create a <filename>.pprof cpu profile file
 	if len(os.Getenv("CPUPROFILE")) != 0 {
+		fmt.Fprintf(os.Stdout, "Logging CPU profiling information to %s\n", os.Getenv(("CPUPROFILE")))
 		f, err := os.Create(os.Getenv("CPUPROFILE"))
 		if err != nil {
-			log.Fatal(err)
+			fmt.Fprintf(os.Stderr, "%s", err.Error())
+			os.Exit(1)
 		}
 		pprof.StartCPUProfile(f)
 		defer pprof.StopCPUProfile()
 	}
+
 	if *versionOnly {
 		fmt.Fprintf(os.Stdout, "%s\n", version.Get())
 		os.Exit(0)
@@ -61,20 +65,22 @@ func main() {
 
 	currentDir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("%s", err.Error())
+		fmt.Fprintf(os.Stderr, "unable to get current working directory: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	// Find the Go module name and path
 	goModuleName, goModulePath, err := module.FindGoModuleNameAndPath(currentDir)
 	if err != nil {
-		log.Fatalf("error occurred finding module path: %s", err.Error())
+		fmt.Fprintf(os.Stderr, "error occurred finding module path: %s\n", err.Error())
 		os.Exit(1)
 	}
 
 	// Load the configuration from the goio.yaml file
 	conf, err := config.Load("goio.yaml")
 	if err != nil {
-		log.Fatalf("%s", err.Error())
+		fmt.Fprintf(os.Stderr, "error occurred loading configuration file: %s\n", err.Error())
+		os.Exit(1)
 	}
 
 	// Build the Regular Expressions for excluding files/folders
@@ -93,39 +99,67 @@ func main() {
 	// Change our working directory to the goModulePath
 	err = os.Chdir(goModulePath)
 	if err != nil {
-		panic(err)
+		fmt.Fprintf(os.Stderr, "unable to change directory to %q: %s\n", goModulePath, err.Error())
+		os.Exit(1)
 	}
 
 	// Pre-optization so that we can skip the Name or Path matches if they are empty
 	excludeByNameRegExpLenOk := len(excludeByNameRegExp.String()) != 0
 	excludeByPathRegExpLenOk := len(excludeByPathRegExp.String()) != 0
 
-	// Walk the filepath looking for Go files
-	if err = filepath.Walk(".", func(path string, f os.FileInfo, err error) error {
+	// If no paths are supplied via the -p flag use the current directory
+	if len(pathList) == 0 {
+		pathList = append(pathList, goModulePath)
+	}
+
+	for _, path := range pathList {
+		f, err := os.Stat(path)
 		if err != nil {
-			return err
+			fmt.Fprintf(os.Stderr, "unable to stat %q: %s\n", path, err.Error())
+			continue
 		}
-		name := f.Name()
-		isDir := f.IsDir()
-		isGoFile := strings.HasSuffix(name, ".go")
-		relativePath := strings.Replace(path, basePath, "", 1)
-		// If the object is not a directory and not a Go file, skip it
-		if isDir || isGoFile {
-			// If the objects name or path matches an exclude Regular Expression, skip it
-			if (excludeByNameRegExpLenOk && excludeByNameRegExp.MatchString(name)) || (excludeByPathRegExpLenOk && excludeByPathRegExp.MatchString(relativePath)) {
-				if isDir {
-					return filepath.SkipDir
+
+		// If the path is a Go file
+		if strings.HasSuffix(path, ".go") {
+			// If the files name or path matches an exclude Regular Expression, skip it
+			if (excludeByNameRegExpLenOk && excludeByNameRegExp.MatchString(f.Name())) || (excludeByPathRegExpLenOk && excludeByPathRegExp.MatchString(path)) {
+				continue
+			}
+			// If the file is not excluded by name or path, queue it for organizing
+			files <- path
+
+		} else if f.IsDir() {
+			// If the path is a directory
+			if err = filepath.Walk(path, func(path string, f os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				name := f.Name()
+				isDir := f.IsDir()
+				isGoFile := strings.HasSuffix(name, ".go")
+				relativePath := strings.Replace(path, basePath, "", 1)
+				// If the object is not a directory and not a Go file, skip it
+				if isDir || isGoFile {
+					// If the objects name or path matches an exclude Regular Expression, skip it
+					if (excludeByNameRegExpLenOk && excludeByNameRegExp.MatchString(name)) || (excludeByPathRegExpLenOk && excludeByPathRegExp.MatchString(relativePath)) {
+						// If the object is a Directory, skip the entire thing
+						if isDir {
+							return filepath.SkipDir
+						}
+						return nil
+					}
+
+					// If the object is a Go file and is not excluded, queue it for organizing
+					if isGoFile {
+						files <- relativePath
+					}
 				}
 				return nil
-			}
-			// If the object is a Go file and is not excluded, queue it for formatting
-			if isGoFile {
-				files <- relativePath
+			}); err != nil {
+				fmt.Fprintf(os.Stderr, "unable to complete walking file tree: %s\n", err.Error())
 			}
 		}
-		return nil
-	}); err != nil {
-		log.Fatalf("unable to complete walking file tree: %s", err.Error())
+
 	}
 
 	// Close the files channel since we are done queuing up files to format
@@ -136,14 +170,17 @@ func main() {
 
 	// set MEMPROFILE=<filename> to create a <filename>.pprof memory profile file
 	if len(os.Getenv("MEMPROFILE")) != 0 {
+		fmt.Fprintf(os.Stdout, "Logging MEMORY profiling information to %s\n", os.Getenv(("MEMPROFILE")))
 		f, err := os.Create(os.Getenv("MEMPROFILE"))
 		if err != nil {
-			log.Fatal("could not create memory profile: ", err)
+			fmt.Fprintf(os.Stderr, "%s", err.Error())
+			os.Exit(1)
 		}
-		defer f.Close() // error handling omitted for example
-		runtime.GC()    // get up-to-date statistics
+		defer f.Close()
+		runtime.GC()
 		if err := pprof.WriteHeapProfile(f); err != nil {
-			log.Fatal("could not write memory profile: ", err)
+			fmt.Fprintf(os.Stderr, "could not write memory profile: %s", err.Error())
+			os.Exit(1)
 		}
 	}
 }

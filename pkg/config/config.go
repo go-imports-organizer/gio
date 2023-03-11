@@ -9,6 +9,7 @@ import (
 	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
+// Load loads the configuration from a yaml file
 func Load(file string) (v1alpha1.Config, error) {
 	var configFile []byte
 	var err error

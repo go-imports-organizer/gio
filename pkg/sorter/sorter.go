@@ -21,12 +21,14 @@ import (
 	v1alpha1 "github.com/go-imports-organizer/goio/pkg/api/v1alpha1"
 )
 
+// SortImportsByPathValue sorts a slice of ImportSpecs using their Path.Value
 type SortImportsByPathValue []ast.ImportSpec
 
 func (a SortImportsByPathValue) Len() int           { return len(a) }
 func (a SortImportsByPathValue) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
 func (a SortImportsByPathValue) Less(i, j int) bool { return a[i].Path.Value < a[j].Path.Value }
 
+// SortGroupsByMatchOrder sorts a slice of Group objects using their MatchOrder
 type SortGroupsByMatchOrder []v1alpha1.Group
 
 func (a SortGroupsByMatchOrder) Len() int           { return len(a) }

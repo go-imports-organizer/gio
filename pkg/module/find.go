@@ -23,6 +23,8 @@ import (
 	"golang.org/x/mod/modfile"
 )
 
+// FindGoModuleNameAndPath finds the current Go modules name (via the go.mod file)
+// and path (location of the go.mod file on the filesystem)
 func FindGoModuleNameAndPath(path string) (string, string, error) {
 	for path != "." {
 		if _, err := os.Stat(path); err != nil {
