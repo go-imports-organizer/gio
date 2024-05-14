@@ -248,8 +248,10 @@ func TestFormat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			wg := sync.WaitGroup{}
 			files := make(chan string, 10)
+			resultsChan := make(chan string)
+			hasResults := false
 			defer close(files)
-			Format(&files, &wg, tt.args.regExpMatchers, tt.args.displayOrder, tt.args.listOnly)
+			Format(&files, &resultsChan, &hasResults, &wg, tt.args.regExpMatchers, tt.args.displayOrder, tt.args.listOnly)
 			wg.Wait()
 		})
 	}
