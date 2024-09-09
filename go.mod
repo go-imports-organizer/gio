@@ -1,9 +1,11 @@
 module github.com/go-imports-organizer/goio
 
-go 1.19
+go 1.22.0
+
+toolchain go1.23.1
 
 require (
-	golang.org/x/mod v0.20.0
+	golang.org/x/mod v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
